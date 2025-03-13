@@ -1,0 +1,116 @@
+USE WAREHOUSE CRICKET_LAB_WH;
+USE ROLE TRAINING_ROLE;
+USE DATABASE RUSH_SALES;
+USE SCHEMA PUBLIC;
+
+-- 1. What product category (product) had the highest sales (in dollars) in 2021? How much did it sell?
+SELECT 
+    p.product AS product_category, 
+    SUM(s.price_per_unit * s.units_sold) AS total_sales
+FROM sales s
+LEFT JOIN product p
+    ON s.product_id = p.product_id
+WHERE YEAR(s.invoice_date) = 2021
+GROUP BY p.product
+ORDER BY total_sales DESC
+LIMIT 1
+;
+-- Men's Street Footwear, 22 689 749
+
+-- 2. What state had the highest sales (in dollars) of women's products in 2021? How much was it?
+SELECT 
+    r.state, 
+    SUM(s.price_per_unit * s.units_sold) AS total_sales
+FROM sales s
+LEFT JOIN product p
+    ON s.product_id = p.product_id
+LEFT JOIN retailer r
+    ON r.retail_location_id = s.retail_location_id
+WHERE YEAR(s.invoice_date) = 2021 AND p.product LIKE 'Women%'
+GROUP BY r.state
+ORDER BY total_sales DESC
+LIMIT 1
+;
+-- California, 3 606 018
+
+-- 3. What state had the highest sales (in dollars) of men's products in 2021? How much was it?
+SELECT 
+    r.state, 
+    SUM(s.price_per_unit * s.units_sold) AS total_sales
+FROM sales s
+LEFT JOIN product p
+    ON s.product_id = p.product_id
+LEFT JOIN retailer r
+    ON r.retail_location_id = s.retail_location_id
+WHERE YEAR(s.invoice_date) = 2021 AND p.product LIKE 'Men%'
+GROUP BY r.state
+ORDER BY total_sales DESC
+LIMIT 1
+;
+-- California, 3 728 350
+
+
+-- 4. What is the average number of units sold in an order in 2021? In 2020?
+SELECT 2021 AS year, AVG(units_sold) as average_units_sold
+FROM sales
+WHERE YEAR(invoice_date) = 2021
+UNION
+SELECT 2020 AS year, AVG(units_sold) as average_units_sold
+FROM sales
+WHERE YEAR(invoice_date) = 2020
+;
+-- 2021, 241 units sold on average
+-- 2020, 355 units sold on average
+
+-- 5. Which retailer purchased the most from RUSH in dollars over 2021 and 2020 and how much?
+-- For 2021:
+SELECT r.retailer, SUM(s.price_per_unit * s.units_sold) as total_sales
+FROM sales s
+LEFT JOIN retailer r
+    ON r.retail_location_id = s.retail_location_id
+WHERE YEAR(s.invoice_date) = 2021
+GROUP BY r.retailer
+ORDER BY total_sales DESC
+LIMIT 1
+;
+-- Foot Locker, 23 276 065
+
+-- For 2020:
+SELECT r.retailer, SUM(s.price_per_unit * s.units_sold) as total_sales
+FROM sales s
+LEFT JOIN retailer r
+    ON r.retail_location_id = s.retail_location_id
+WHERE YEAR(s.invoice_date) = 2020
+GROUP BY r.retailer
+ORDER BY total_sales DESC
+LIMIT 1
+;
+-- West Gear, 11 703 616
+
+-- For 2021 & 2020 combined
+SELECT r.retailer, SUM(s.price_per_unit * s.units_sold) as total_sales
+FROM sales s
+LEFT JOIN retailer r
+    ON r.retail_location_id = s.retail_location_id
+WHERE YEAR(s.invoice_date) = 2020 OR YEAR(s.invoice_date) = 2021
+GROUP BY r.retailer
+ORDER BY total_sales DESC
+LIMIT 1
+;
+-- West Gear, 32 409 558
+
+
+-- Joining the tables sales and retailer and selecting the columns that will be necessary in Tableau
+SELECT s.order_id, s.invoice_date, s.price_per_unit, s.units_sold, s.sales_method, r.state, r.retailer, (s.price_per_unit * s.units_sold) as sales
+FROM sales s
+LEFT JOIN retailer r
+    ON r.retail_location_id = s.retail_location_id
+;
+
+SELECT s.order_id, s.invoice_date, s.price_per_unit, s.units_sold, s.sales_method, r.state, r.retailer, p.product, (s.price_per_unit * s.units_sold) as sales
+FROM sales s
+LEFT JOIN retailer r
+    ON r.retail_location_id = s.retail_location_id
+LEFT JOIN product p
+    ON p.product_id = s.product_id
+;
